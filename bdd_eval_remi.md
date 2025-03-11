@@ -295,6 +295,8 @@ QUESTION
 |                  28 |
 +---------------------+
 
+SELECT COUNT(*) FROM logement;
+
 **Question 5 : Affichez les logements à vendre à moins de 150 000 € dans l'ordre croissant des prix:**
 +------------+-------------+----------+--------+------------+-----------+
 | idLogement | genre       | ville    | prix   | superficie | categorie |
@@ -311,6 +313,8 @@ QUESTION
 +--------+
 |      8 |
 +--------+
+
+SELECT COUNT(*) FROM logement WHERE categorie="location";
 
 **Question 7 : Affichez les villes différentes recherch�es par les personnes demandeuses d'un logement**
 +----------+
@@ -329,6 +333,8 @@ QUESTION
 | lyon     |      5 |
 | paris    |     11 |
 +----------+--------+
+
+SELECT ville,COUNT(*) FROM logement GROUP BY ville ORDER BY ville;
 
 **Question 9 : Quelles sont les id des logements destinés à la location ?**
 +------------+
@@ -353,12 +359,16 @@ QUESTION
 |       5786 |
 +------------+
 
+SELECT idLogement FROM logement WHERE superficie BETWEEN 20 AND 30;
+
 **Question 11 : Quel est le prix vendeur (hors commission) du logement le moins cher à vendre ? (Alias : prix minimum)**
 +--------------+
 | prix minimum |
 +--------------+
 |        98000 |
 +--------------+
+
+SELECT MIN(prix) FROM logement WHERE categorie="vente";
 
 **Question 12 : Dans quelles villes se trouve les maisons à vendre ?****
 +--------+----------+
@@ -367,6 +377,8 @@ QUESTION
 | maison | paris    |
 | maison | bordeaux |
 +--------+----------+
+
+SELECT genre,ville FROM logement WHERE genre="maison";
 
 **Question 13 : L'agence Orpi souhaite diminuer les frais qu'elle applique sur le logement ayant l'id  5246. Passer les frais de ce logement de 800 à 730€.**
 
@@ -380,6 +392,8 @@ Query OK, 1 row affected
 |       5723 |
 |       5961 |
 +------------+
+
+SELECT idLogement FROM logement WHERE idLogement IN (SELECT idLogement FROM logement_agence WHERE idAgence IN (SELECT idAgence FROM agence WHERE nom ="laforet"));
 
 **Question 15 : Affichez le nombre de propriétaires dans la ville de Paris (Alias : Nombre)**
 +--------+
@@ -396,6 +410,8 @@ Query OK, 1 row affected
 |          3 | mehdi   |         2 |          3 | appartement | bordeaux | 120000 |         18 | vente     |
 |          4 | charles |         3 |          4 | appartement | bordeaux | 145000 |         21 | vente     |
 +------------+---------+-----------+------------+-------------+----------+--------+------------+-----------+
+
+SELECT p.idPersonne,p.prenom,d.idDemande,d.idPersonne,d.genre,d.ville,d.budget,d.superficie,d.categorie FROM personne p INNER JOIN demande d ON p.idPersonne = d.idPersonne WHERE d.categorie="vente" LIMIT 0,3;
 
 **Question 17 : Affichez le prénom du vendeur pour le logement ayant la référence  5770** 
 +--------+
@@ -417,6 +433,8 @@ Query OK, 1 row affected
 | axelle  |
 | morgane |
 +---------+
+
+SELECT prenom FROM personne WHERE idPersonne IN (SELECT idPersonne FROM demande WHERE ville="lyon");
 
 **Question 19 : Affichez les prénoms des personnes souhaitant acc�der à un logement en location sur la ville de Paris**
 +----------+
@@ -456,6 +474,8 @@ Query OK, 1 row affected
 | axelle    |         12 |
 +-----------+------------+
 
+SELECT DISTINCT p.prenom,d.superficie FROM personne p INNER JOIN demande d WHERE p.idPersonne=d.idPersonne AND d.categorie="vente" ORDER BY d.superficie DESC;
+
 **Question 21 : Quel sont les prix finaux propos�s par les agences pour la maison à la vente ayant la référence  5091  ? (Alias : prix avec frais d'agence)**
 +---------------------------+
 | prix avec frais d'agence  |
@@ -470,6 +490,8 @@ Query OK, 1 row affected
 +------------+--------+-------+------------+
 |       5873 | 676700 | 33835 |     710535 |
 +------------+--------+-------+------------+
+
+SELECT l.idLogement,l.prix,la.frais,SUM(l.prix+la.frais) AS "prix total" FROM logement l INNER JOIN logement_agence la ON l.idLogement = la.idLogement WHERE l.idLogement=5873;
 
 **Question 23 : Si l'ensemble des logements étaient vendus ou loués demain, quel serait le bénéfice généré grâce aux frais d'agence et pour chaque agence (Alias : benefice, classement : par ordre croissant des gains)**
 +---------------------+----------+
@@ -504,6 +526,10 @@ Query OK, 1 row affected
 | laforet             |       5961 |   300 |
 | bouygues immobilier |       5961 |   890 |
 +---------------------+------------+-------+
+
+SELECT l.prix,la.idLogement,la.frais FROM logement l INNER JOIN logement_agence la ON l.idLogement = la.idLogement WHERE l.categorie="location" ORDER BY l.prix;
+
+
 
 **Question 25 : Quel est le prénom du propriétaire proposant le logement le moins cher à louer ?**
 +--------+
@@ -546,6 +572,8 @@ Query OK, 1 row affected
 | alexis     | paris    |
 +------------+----------+
 
+SELECT p.prenom,l.ville FROM personne p INNER JOIN logement_personne lp ON p.idPersonne = lp.idPersonne INNER JOIN logement l on lp.idLogement = l.idLogement;
+
 **Question 27 : Quel est l'agence immobilière s'occupant de la plus grande gestion de logements répertoriés à Paris ? (alias : nombre, classement : trié par ordre décroissant)**
 +---------------------+--------+
 | nom                 | nombre |
@@ -572,6 +600,11 @@ Query OK, 1 row affected
 | assia    |     122623 |
 | florian  |     127995 |
 +----------+------------+
+
+idPersonne dans logement personne
+prix final = prix + frais
+
+SELECT p.prenom,l.prix+la.frais AS "prix final" FROM personne p INNER JOIN logement_personne lp ON p.idPersonne = lp.idPersonne INNER JOIN logement l ON lp.idLogement = l.idLogement INNER JOIN logement_agence la ON l.idLogement = la.idLogement WHERE l.prix < 130000 AND "prix final" < 130000 AND l.categorie="vente" ORDER BY "prix final" DESC;
 **Question 29 : Affichez le nombre de logements à la vente dans la ville de recherche de hugo  (alias : nombre)**
 +--------+
 | nombre |
